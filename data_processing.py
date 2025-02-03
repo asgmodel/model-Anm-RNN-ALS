@@ -46,6 +46,27 @@ def get_data_statistics(df):
     }
     return stats
 
+def four_hot_encoding(df, lat_bins=100, lon_bins=100, sog_bins=50, cog_bins=10, double_data=1):
+    data = []
+    features = ['Latitude', 'Longitude', 'Speed', 'Course']
+    vessels = df['Vessel'].unique()
+    
+    for v in vessels:
+        v1 = df[df['Vessel'] == v]
+        fs = v1[features].values
+        
+        fs = torch.tensor(fs, dtype=torch.float32)
+        fs[:, 0] /= lat_bins
+        fs[:, 1] /= lon_bins
+        fs[:, 2] /= sog_bins
+        fs[:, 3] /= 360
+        
+        if len(fs) > 2:
+            data.append(fs)
+    
+    data *= double_data
+    return data
+
 def main():
     path = '/content/DS-ALS-REDSEA-CLEANED.csv'
     df = load_data(path)
@@ -57,7 +78,8 @@ def main():
     for key, value in stats.items():
         print(f"{key}: {value}")
     
-    return df
+    encoded_data = four_hot_encoding(df)
+    return df, encoded_data
 
 if __name__ == "__main__":
-    df_cleaned = main()
+    df_cleaned, encoded_data = main()
